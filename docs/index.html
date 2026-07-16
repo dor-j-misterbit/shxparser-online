@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="./favicon.ico" sizes="any" />
   <title>shxparser online</title>
   <style>
     :root {
@@ -216,7 +217,12 @@ await micropip.install("pypdf")
         setStatus("Loading shxparser package…");
         pyodide.FS.mkdirTree("/app/shxparser");
         pyodide.FS.mkdirTree("/app/fonts");
-        const initPy = await fetchText("./pkg/shxparser/__init__.py");
+        let initPy = '"""shxparser package marker."""\n';
+        try {
+          initPy = await fetchText("./pkg/shxparser/__init__.py");
+        } catch (_) {
+          /* GitHub Pages 404s empty files; inline fallback is enough. */
+        }
         const shxPy = await fetchText("./pkg/shxparser/shxparser.py");
         pyodide.FS.writeFile("/app/shxparser/__init__.py", initPy);
         pyodide.FS.writeFile("/app/shxparser/shxparser.py", shxPy);
