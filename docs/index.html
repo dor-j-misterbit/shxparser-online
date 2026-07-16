@@ -155,8 +155,9 @@
       </div>
 
       <p class="note">
-        Output = original pages + a new first page with SHX stroke rendering of the text.
-        CAD Type3 SHX text often extracts as mojibake unless you supply the matching .shx and encoding.
+        Output keeps your original pages intact (including CAD layers / OCProperties), then appends
+        one letter-size SHX preview page built from extracted text.
+        CAD Type3 SHX text often extracts as mojibake unless you supply a matching .shx and encoding.
       </p>
 
       <div class="actions" style="margin-top: 1rem;">
@@ -410,14 +411,13 @@ def process_pdf(pdf_bytes, shx_path, font_size=14.0, max_chars=4000, override_te
     stream = DecodedStreamObject()
     stream.set_data(header + ops)
 
-    writer = PdfWriter()
+    # clone_from keeps catalog entries CAD PDFs need (esp. /OCProperties layers).
+    # Plain PdfWriter()+add_page() drops them and many viewers hide the drawing.
+    writer = PdfWriter(clone_from=reader)
     cover = PageObject.create_blank_page(width=page_w, height=page_h)
     cover[NameObject("/Resources")] = resources
     cover[NameObject("/Contents")] = stream
-    writer.add_page(cover)
-
-    for page in reader.pages:
-        writer.add_page(page)
+    writer.insert_page(cover, len(writer.pages))  # append after originals
 
     buf = io.BytesIO()
     writer.write(buf)
@@ -438,12 +438,14 @@ def process_pdf(pdf_bytes, shx_path, font_size=14.0, max_chars=4000, override_te
 
     meta = {
         "pages": len(reader.pages),
+        "out_pages": len(writer.pages),
         "extracted_chars": len(joined),
         "rendered_chars": len(text),
         "rendered_lines": rendered_lines,
         "render_errors": render_errors,
         "source": source_note,
         "font": shx_path,
+        "has_ocproperties": "/OCProperties" in reader.trailer["/Root"],
         "bounds": list(bounds) if bounds else None,
         "preview": preview,
         "sample": text[:280],
@@ -545,7 +547,8 @@ meta
         setStatus(
           [
             "Done.",
-            `PDF pages in: ${meta.pages}`,
+            `PDF pages in: ${meta.pages} → out: ${meta.out_pages}`,
+            `CAD layers (OCProperties) preserved: ${meta.has_ocproperties}`,
             `Text source: ${meta.source}`,
             `Extracted chars: ${meta.extracted_chars}`,
             `Rendered chars: ${meta.rendered_chars}`,
