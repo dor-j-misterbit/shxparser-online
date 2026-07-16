@@ -1,1 +1,2 @@
-
+# Local package (editable install also works: pip install -e .)
+pypdf>=4.0
