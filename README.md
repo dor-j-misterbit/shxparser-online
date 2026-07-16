@@ -10,6 +10,17 @@ This format is used for many CNC and laser operations.
 
 `pip install shxparser`
 
+# Online demo (GitHub Pages)
+
+Open `/docs` on this fork for a minimal browser demo:
+
+- runs `shxparser` in-browser via Pyodide (WASM)
+- upload a PDF → extract text → render with an SHX font → download processed PDF
+- default font: `docs/fonts/SCRIPTS8.SHX` (optional custom `.shx` upload)
+
+After enabling GitHub Pages (source: `/docs` on `main`), the site is at:
+
+`https://dor-j-misterbit.github.io/shxparser-online/`
 
 ---
 
